@@ -1,7 +1,10 @@
 import azure.functions as func
 import logging
 import os
-import pymongo
+import time
+
+from pymongo import MongoClient
+from pymongo.collection import ReturnDocument
 
 DEFAULT_HEADERS = {
     'Access-Control-Allow-Origin': '*',
@@ -31,7 +34,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     else:
         url = None
 
-    dbClient = pymongo.MongoClient(url)
+    dbClient = MongoClient(url)
 
     user = session = None
     try:
@@ -42,20 +45,22 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     else:
         return func.HttpResponse(session, headers=DEFAULT_HEADERS)
     
-def checkOrCreateUser(email, password, reqType, dbClient) -> pymongo.ReturnDocument:
+def checkOrCreateUser(email, password, reqType, dbClient) -> ReturnDocument:
     if (email == "" or password == ""):
         raise AttributeError("Email or password is missing from the request")
     
     clientData = {'email': email, 'password': password}
     
-    usersDB = dbClient.db
-    user = usersDB.find_one(clientData)
+    usersTbl = dbClient.test.users
+    user = usersTbl.find_one(clientData)
+    
+    print(user)
     
     if (user and reqType == NEW_CLIENT_REQ):
         raise AttributeError(f"Client with email {email} already exists!")
     
     if (reqType == NEW_CLIENT_REQ):
-        user = usersDB.insert_one(clientData)
+        user = usersTbl.insert_one(clientData)    
     
     return user
     
@@ -64,4 +69,11 @@ def createSession(user, dbClient) -> str:
     if user == None:
         raise AttributeError("User not found!")
     else:
-        return "123abc"
+        sessionsTbl = dbClient.test.sessions
+        userSessionObj = sessionsTbl.find_one({'user': user['email']})
+        
+        if (not userSessionObj):
+            newSessionObj = sessionsTbl.insert_one({ 'user': user['email'], 'timestamp': time.time() })
+            return str(newSessionObj.inserted_id)
+            
+        return str(userSessionObj['_id'])
