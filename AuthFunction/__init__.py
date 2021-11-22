@@ -2,6 +2,7 @@ import azure.functions as func
 import logging
 import os
 import time
+import json
 
 from pymongo import MongoClient
 from pymongo.collection import ReturnDocument
@@ -43,24 +44,31 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     except AttributeError as err:
         return func.HttpResponse(str(err), status_code=400, headers=DEFAULT_HEADERS) 
     else:
-        return func.HttpResponse(session, headers=DEFAULT_HEADERS)
+        sessionData = { 
+            'session': session, 
+            'name': "John Doe",
+            'email': user['email']
+        }
+        resp = json.dumps(sessionData)
+        return func.HttpResponse(resp, headers=DEFAULT_HEADERS)
     
 def checkOrCreateUser(email, password, reqType, dbClient) -> ReturnDocument:
     if (email == "" or password == ""):
         raise AttributeError("Email or password is missing from the request")
     
-    clientData = {'email': email, 'password': password}
+    clientData = { 'email': email }
     
     usersTbl = dbClient.test.users
     user = usersTbl.find_one(clientData)
-    
-    print(user)
     
     if (user and reqType == NEW_CLIENT_REQ):
         raise AttributeError(f"Client with email {email} already exists!")
     
     if (reqType == NEW_CLIENT_REQ):
         user = usersTbl.insert_one(clientData)    
+   
+    if (user and password != user['password']):
+        raise AttributeError(f"Incorrect password for email {email}")
     
     return user
     
@@ -72,8 +80,11 @@ def createSession(user, dbClient) -> str:
         sessionsTbl = dbClient.test.sessions
         userSessionObj = sessionsTbl.find_one({'user': user['email']})
         
-        if (not userSessionObj):
+        sessionId = None
+        if (userSessionObj):
+            sessionId = userSessionObj['_id']
+        else:
             newSessionObj = sessionsTbl.insert_one({ 'user': user['email'], 'timestamp': time.time() })
-            return str(newSessionObj.inserted_id)
+            sessionId = newSessionObj.inserted_id
             
-        return str(userSessionObj['_id'])
+        return str(sessionId)
