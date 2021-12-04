@@ -5,4 +5,4 @@ DEFAULT_HEADERS = {
     'Access-Control-Allow-Headers': 'Content-Type, access-control-allow-origin, session-id'
 }
 
-DB_NAME = "test"
+DB_NAME = "db"

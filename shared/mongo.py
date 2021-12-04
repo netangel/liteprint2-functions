@@ -8,7 +8,7 @@ def getClient() -> MongoClient:
     if appMode == 'Development':
         url = environ['MONGO_DB_URL']
     else:
-        url = None
+        url = environ['MONGO_DB_URL']
 
     return MongoClient(url)
 
