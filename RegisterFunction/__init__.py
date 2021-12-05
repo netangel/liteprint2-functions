@@ -7,8 +7,8 @@ from ..shared.session import createSession
 from ..shared.user import checkUser, createUser
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
-    if (req.method == "OPTIONS"):
-        return func.HttpResponse(None, headers=DEFAULT_HEADERS)
+    # if (req.method == "OPTIONS"):
+        # return func.HttpResponse(None, headers=DEFAULT_HEADERS)
     
     name = lastName = email = None
     insertedUser = session = None
