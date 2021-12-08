@@ -1,7 +1,7 @@
 from pymongo.collection import ReturnDocument
 from pymongo.results import InsertOneResult
 
-from .mongo import getDb
+from .mongo import MyMongo 
 
 def checkUserWithPassword(email, password) -> ReturnDocument:
     if (email == "" or password == ""):
@@ -19,8 +19,8 @@ def checkUser(email) -> ReturnDocument:
         raise AttributeError("Email is missing from the request")
     
     clientData = { 'email': email }
-    return getDb().users.find_one(clientData)
+    return MyMongo().getDb().users.find_one(clientData)
 
 def createUser(userDara) -> InsertOneResult:
     # More checks?
-    return getDb().users.insert_one(userDara)
+    return MyMongo().getDb().users.insert_one(userDara)

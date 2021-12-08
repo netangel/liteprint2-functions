@@ -1,4 +1,4 @@
-from .mongo import getDb
+from .mongo import MyMongo
 import time
 
 def createSession(email) -> str:
@@ -9,7 +9,7 @@ def createSession(email) -> str:
     if (userSessionObj):
         sessionId = userSessionObj['_id']
     else:
-        newSessionObj = getDb().sessions.insert_one({ 'user': email, 'timestamp': time.time() })
+        newSessionObj = MyMongo().getDb().sessions.insert_one({ 'user': email, 'timestamp': time.time() })
         sessionId = newSessionObj.inserted_id
             
     return str(sessionId)
@@ -18,5 +18,5 @@ def getSessionByUser(email) -> str:
     if email == None:
         raise AttributeError("Email is undefined!")
     
-    return getDb().sessions.find_one({'user': email})
+    return MyMongo().getDb().sessions.find_one({'user': email})
     
